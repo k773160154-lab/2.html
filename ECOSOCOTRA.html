@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إيكو سقطرى | الموسوعة والخريطة التفاعلية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --socotra-green: #5D8A3B;
+            --socotra-blue: #1A4D6D;
+            --socotra-teal: #14b8a6;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #fff;
+            color: #1f2937;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: var(--socotra-green); border-radius: 10px; }
+
+        .bg-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%235d8a3b' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        /* Map Section Styles */
+        #socotra-map-section {
+            display: none;
+            direction: rtl;
+            background: #f4f7f6;
+            padding: 40px 5%;
+            border-radius: 40px;
+            margin: 20px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .active-tab { 
+            color: var(--socotra-green) !important; 
+            border-bottom: 2px solid var(--socotra-green); 
+        }
+
+        /* تصميم موسوعة التنوع الحيوي الفرعي */
+        .encyclopedia-wrapper {
+            font-family: 'Tajawal', sans-serif;
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .ency-tab-btn {
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+        .ency-tab-btn.active {
+            background-color: #0d9488;
+            color: white;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.3);
+        }
+        .stat-circle {
+            border: 2px dashed #0d9488;
+            border-radius: 50%;
+            padding: 1rem;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 130px;
+            height: 130px;
+        }
+
+        /* Interactive Map SVG */
+        .island-path, .small-island { 
+            fill: #d18a1b; 
+            stroke: #9a6511; 
+            stroke-width: 2; 
+            cursor: pointer; 
+            transition: 0.3s; 
+        }
+        .island-path:hover, .small-island:hover { 
+            fill: #0d7b72; 
+            filter: drop-shadow(0 0 8px rgba(13,123,114,0.5));
+        }
+
+        .map-tooltip { 
+            position: absolute; 
+            background: rgba(9,61,57,0.98); 
+            color: white; 
+            padding: 12px; 
+            border-radius: 12px; 
+            width: 200px; 
+            pointer-events: none; 
+            opacity: 0; 
+            transition: 0.2s; 
+            z-index: 100;
+            font-size: 13px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        /* Stat components */
+        .circle-chart { 
+            width: 140px; height: 140px; border-radius: 50%; margin: 15px auto; 
+            background: conic-gradient(#345eb8 0% 75%, #ef4444 75% 88%, #f59e0b 88% 100%); 
+            position: relative; 
+        }
+        .circle-chart::after { content: ""; position: absolute; inset: 18px; background: white; border-radius: 50%; }
+        .circle-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 2; font-size: 24px; font-weight: 800; color: #345eb8; }
+        
+        .dot { width: 10px; height: 10px; display: inline-block; border-radius: 50%; margin-left: 6px; }
+        .blue { background:#345eb8; } .orange { background:#f59e0b; } .red { background:#ef4444; }
+
+        .number-box { background: #f8fafc; padding: 15px; border-radius: 15px; text-align: center; border: 1px solid #f1f5f9; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="fixed w-full z-[100] bg-white/95 border-b border-gray-100 shadow-sm">
+        <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="showTab('main', true)">
+                <i class="fas fa-leaf text-[#5D8A3B] text-2xl"></i>
+                <div class="flex flex-col leading-tight">
+                    <span class="text-xl font-black text-[#1A4D6D]">إيكو سقطرى</span>
+                    <span class="text-[10px] font-bold text-[#5D8A3B] tracking-widest uppercase">Eco Socotra</span>
+                </div>
+            </div>
+            <nav class="hidden md:flex items-center gap-6">
+                <a href="javascript:void(0)" onclick="showTab('main')" id="nav-main" class="nav-link hover:text-[#5D8A3B] font-semibold active-tab">نبذة</a>
+                <a href="javascript:void(0)" onclick="showTab('map')" id="nav-map" class="nav-link hover:text-[#5D8A3B] font-semibold">خريطة الأرخبيل</a>
+                <a href="javascript:void(0)" onclick="showTab('encyclopedia')" id="nav-encyclopedia" class="nav-link hover:text-[#5D8A3B] font-semibold">موسوعة التنوع الحيوي</a>
+                <a href="javascript:void(0)" onclick="showTab('main', true, '#classifications')" class="hover:text-[#5D8A3B] font-semibold">التصنيفات</a>
+                <a href="javascript:void(0)" onclick="showTab('main', true, '#ai-lab')" class="bg-[#5D8A3B] text-white px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-opacity-90 transition-all">
+                    <i class="fas fa-sparkles"></i> المختبر الذكي
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Wrapper -->
+    <main id="main-content-wrapper">
+        <!-- Hero Section -->
+        <section class="pt-32 pb-20 bg-pattern">
+            <div class="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <span class="bg-[#5D8A3B]/10 text-[#5D8A3B] px-4 py-1 rounded-full text-sm font-bold mb-4 inline-block">تنوع بيولوجي عالمي</span>
+                    <h1 class="text-4xl md:text-6xl font-black text-[#1A4D6D] mb-6 leading-tight">أرخبيل سقطرى: <br> <span class="text-[#5D8A3B]">جوهرة المحيط الهندي</span></h1>
+                    <p class="text-gray-600 text-lg mb-8 leading-relaxed italic">موطن لأكثر من 825 نوعاً من النباتات، 37% منها لا توجد في أي مكان آخر على وجه الأرض.</p>
+                    <div class="flex gap-4">
+                        <button onclick="showTab('map')" class="bg-[#1A4D6D] text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:bg-opacity-90 transition-all flex items-center gap-2">
+                            <i class="fas fa-map-marked-alt"></i> استكشف الخريطة
+                        </button>
+                        <button onclick="toggleChat()" class="border-2 border-[#1A4D6D] text-[#1A4D6D] px-8 py-4 rounded-2xl font-bold hover:bg-[#1A4D6D]/5 transition-all">المستشار الذكي</button>
+                    </div>
+                </div>
+                <div class="relative">
+                    <img src="https://raw.githubusercontent.com/k773160154-lab/2.html/6590d99d6c5536aa00d54046126d3dca48657a13/photo_7_2025-11-07_21-56-13.jpg" 
+                         alt="دم الأخوين" 
+                         class="rounded-[40px] shadow-2xl z-10 relative object-cover h-[400px] w-full"
+                         onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/0/0f/Dragon_Blood_Tree%2C_Socotra_Island.JPG'">
+                    <div class="absolute -bottom-6 -right-6 w-32 h-32 bg-[#5D8A3B] rounded-full z-0 opacity-20"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about" class="py-20 scroll-mt-24">
+            <div class="container mx-auto px-6">
+                <div class="flex flex-col md:flex-row gap-12">
+                    <div class="md:w-1/3">
+                        <h2 class="text-3xl font-black text-[#1A4D6D] mb-6 border-r-4 border-[#5D8A3B] pr-4">نبذة تاريخية</h2>
+                        <p class="text-gray-600">أرخبيل يمني يتكون من أربع جزر، صُنفت كموقع تراث عالمي في 2008 نظراً لمكانتها كأهم موقع للتنوع الحيوي في المنطقة.</p>
+                    </div>
+                    <div class="md:w-2/3 bg-[#f8fafc] p-8 rounded-[32px] border border-gray-100">
+                        <p class="text-xl leading-relaxed text-gray-700 mb-6">تمثل سقطرى نموذجاً فريداً للتطور الحيوي، حيث يطلق عليها "غالاباغوس المحيط الهندي". تحمي الجزيرة آلاف الكائنات من الانقراض وتديرها خطط صون دولية صارمة.</p>
+                        <div class="relative overflow-hidden rounded-2xl shadow-sm">
+                            <img src="https://raw.githubusercontent.com/k773160154-lab/2.html/15370c38cfb91d6ada5b575ae19963b19f76c685/photo_3_2025-11-07_21-56-13.jpg" 
+                                 alt="شجرة دم الأخوين" 
+                                 class="w-full h-80 object-cover hover:scale-105 transition-transform duration-700"
+                                 onerror="this.src='https://placehold.co/800x450/1A4D6D/white?text=Dragon+Blood+Tree'">
+                            <div class="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-[#1A4D6D]">
+                                صورة حصرية لأشجار دم الأخوين
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Classifications -->
+        <section id="classifications" class="py-20 bg-gray-50 scroll-mt-24">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl font-black text-[#1A4D6D] mb-12">التصنيفات الدولية</h2>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                        <i class="fas fa-landmark text-3xl text-[#5D8A3B] mb-4"></i>
+                        <h3 class="font-bold mb-2">التراث العالمي (2008)</h3>
+                        <p class="text-sm text-gray-500">موقع طبيعي استثنائي من اليونسكو.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                        <i class="fas fa-water text-3xl text-blue-500 mb-4"></i>
+                        <h3 class="font-bold mb-2">اتفاقية رمسار (2007)</h3>
+                        <p class="text-sm text-gray-500">حماية بحيرة ديطوح كمنطقة رطبة.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+                        <i class="fas fa-users text-3xl text-teal-500 mb-4"></i>
+                        <h3 class="font-bold mb-2">الإنسان والمحيط (2003)</h3>
+                        <p class="text-sm text-gray-500">تحت مظلة برنامج MAB العالمي.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Conservation Plan -->
+        <section id="conservation" class="py-20 scroll-mt-24">
+            <div class="container mx-auto px-6">
+                <div class="bg-[#1A4D6D] text-white rounded-[40px] p-10 md:p-16 flex flex-col md:flex-row gap-10 items-center">
+                    <div class="md:w-1/2">
+                        <h2 class="text-3xl font-black mb-6">خطة الحفاظ (Zoning)</h2>
+                        <p class="opacity-80 mb-6 leading-relaxed">تعتمد إدارة سقطرى على تقسيم المناطق لضمان الاستدامة، وتشمل 12 محمية برية و27 محمية بحرية موزعة بعناية.</p>
+                        <div class="flex gap-6">
+                            <div><span class="text-3xl font-bold text-[#5D8A3B]">39</span> <p class="text-xs opacity-60 uppercase">إجمالي المحميات</p></div>
+                            <div><span class="text-3xl font-bold text-[#5D8A3B]">73%</span> <p class="text-xs opacity-60 uppercase">استخدام الموارد</p></div>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2 grid grid-cols-2 gap-4">
+                        <div class="bg-white/10 p-5 rounded-2xl border border-white/5">محميات طبيعية</div>
+                        <div class="bg-white/10 p-5 rounded-2xl border border-white/5">منتزه وطني</div>
+                        <div class="bg-white/10 p-5 rounded-2xl border border-white/5">المناظر الطبيعية</div>
+                        <div class="bg-white/10 p-5 rounded-2xl border border-white/5">استخدام الموارد</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Lab -->
+        <section id="ai-lab" class="py-20 bg-pattern scroll-mt-24">
+            <div class="container mx-auto px-6 text-center max-w-3xl">
+                <h2 class="text-3xl font-black text-[#1A4D6D] mb-4 text-center">المختبر الذكي</h2>
+                <p class="text-gray-600 mb-10">تعرف على الكائنات باستخدام الذكاء الاصطناعي</p>
+                <div class="bg-white p-10 rounded-[40px] shadow-sm border-2 border-dashed border-gray-200 cursor-pointer hover:border-[#5D8A3B] transition-all" onclick="document.getElementById('img-up').click()">
+                    <i class="fas fa-cloud-upload-alt text-4xl text-[#5D8A3B] mb-4"></i>
+                    <p class="font-bold">ارفع صورة للنبات أو الكائن</p>
+                    <input type="file" id="img-up" class="hidden">
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Encyclopedia Section -->
+    <section id="biodiversity-encyclopedia" class="encyclopedia-wrapper pt-32 pb-20 bg-gray-50">
+        <div class="max-w-6xl mx-auto px-4">
+            <header class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-teal-800 mb-4">موسوعة التنوع الحيوي</h1>
+                <p class="text-gray-600 max-w-2xl mx-auto font-medium">استكشف الكنوز الطبيعية والبيانات التفصيلية للحياة البرية والبحرية الفريدة، دليلك الشامل للمستوطنات والأنواع النادرة.</p>
+            </header>
+
+            <!-- Navigation Tabs (Internal) -->
+            <nav class="flex flex-wrap justify-center gap-4 mb-12 bg-white p-6 rounded-2xl shadow-sm overflow-x-auto">
+                <button onclick="showEncyTab('plants')" class="ency-tab-btn active flex flex-col items-center p-4 rounded-xl border border-gray-100 hover:bg-teal-50" id="btn-plants">
+                    <i class="fas fa-seedling text-2xl mb-2"></i>
+                    <span class="text-sm font-bold">النباتات البرية</span>
+                </button>
+                <button onclick="showEncyTab('invertebrates')" class="ency-tab-btn flex flex-col items-center p-4 rounded-xl border border-gray-100 hover:bg-teal-50" id="btn-invertebrates">
+                    <i class="fas fa-bug text-2xl mb-2"></i>
+                    <span class="text-sm font-bold">اللافقاريات</span>
+                </button>
+                <button onclick="showEncyTab('mammals')" class="ency-tab-btn flex flex-col items-center p-4 rounded-xl border border-gray-100 hover:bg-teal-50" id="btn-mammals">
+                    <i class="fas fa-otter text-2xl mb-2"></i>
+                    <span class="text-sm font-bold">الثدييات والطيور</span>
+                </button>
+                <button onclick="showEncyTab('marine')" class="ency-tab-btn flex flex-col items-center p-4 rounded-xl border border-gray-100 hover:bg-teal-50" id="btn-marine">
+                    <i class="fas fa-water text-2xl mb-2"></i>
+                    <span class="text-sm font-bold">الحياة البحرية</span>
+                </button>
+                <button onclick="showEncyTab('fish')" class="ency-tab-btn flex flex-col items-center p-4 rounded-xl border border-gray-100 hover:bg-teal-50" id="btn-fish">
+                    <i class="fas fa-fish text-2xl mb-2"></i>
+                    <span class="text-sm font-bold">الأسماك</span>
+                </button>
+                <button onclick="showEncyTab('others')" class="ency-tab-btn flex flex-col items-center p-4 rounded-xl border border-gray-100 hover:bg-teal-50" id="btn-others">
+                    <i class="fas fa-info-circle text-2xl mb-2"></i>
+                    <span class="text-sm font-bold">أخرى</span>
+                </button>
+            </nav>
+
+            <!-- Encyclopedia Content Area -->
+            <div id="ency-content" class="min-h-[500px]">
+                <!-- Tab Content: Plants -->
+                <section id="plants" class="ency-content-section">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                        <div class="stat-circle mx-auto">
+                            <span class="text-3xl font-bold text-teal-600">848</span>
+                            <span class="text-xs text-center mt-1 text-gray-500 leading-tight">أنواع النباتات<br>316 نوعاً (37%) مستوطن</span>
+                        </div>
+                        <div class="stat-circle mx-auto">
+                            <span class="text-3xl font-bold text-teal-600">15</span>
+                            <span class="text-xs text-center mt-1 text-gray-500 leading-tight">جنس من النباتات المستوطنة</span>
+                        </div>
+                        <div class="stat-circle mx-auto">
+                            <span class="text-3xl font-bold text-teal-600">1</span>
+                            <span class="text-xs text-center mt-1 text-gray-500 leading-tight">مجموعة شبه مستوطنة "الديراخماسيا"</span>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border border-teal-50">
+                        <h3 class="text-2xl font-bold text-teal-700 mb-6 text-center">"الخمسة الكبار"</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            <div class="text-center p-4 bg-teal-50 rounded-xl hover:shadow-md transition-all cursor-pointer">
+                                <i class="fas fa-tree text-3xl text-teal-600 mb-2"></i>
+                                <p class="font-bold text-sm">شجرة الخيار</p>
+                            </div>
+                            <div class="text-center p-4 bg-teal-50 rounded-xl hover:shadow-md transition-all cursor-pointer">
+                                <i class="fas fa-seedling text-3xl text-teal-600 mb-2"></i>
+                                <p class="font-bold text-sm">شجرة التين</p>
+                            </div>
+                            <div class="text-center p-4 bg-teal-50 rounded-xl hover:shadow-md transition-all cursor-pointer">
+                                <i class="fas fa-fan text-3xl text-teal-600 mb-2"></i>
+                                <p class="font-bold text-sm">وردة الصحراء</p>
+                            </div>
+                            <div class="text-center p-4 bg-teal-50 rounded-xl hover:shadow-md transition-all cursor-pointer">
+                                <i class="fas fa-umbrella text-3xl text-teal-600 mb-2"></i>
+                                <p class="font-bold text-sm">دم الأخوين</p>
+                            </div>
+                            <div class="text-center p-4 bg-teal-50 rounded-xl hover:shadow-md transition-all cursor-pointer">
+                                <i class="fas fa-leaf text-3xl text-teal-600 mb-2"></i>
+                                <p class="font-bold text-sm">شجرة اللبان</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab Content: Invertebrates -->
+                <section id="invertebrates" class="ency-content-section hidden">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm text-center">
+                            <span class="block text-4xl font-bold text-teal-600 mb-2">68</span>
+                            <p class="text-sm font-bold">نوع من العناكب</p>
+                            <p class="text-xs text-gray-500">51% مستوطنة</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm text-center">
+                            <span class="block text-4xl font-bold text-teal-600 mb-2">100</span>
+                            <p class="text-sm font-bold">نوع من الحلزونات</p>
+                            <p class="text-xs text-gray-500">98% مستوطنة</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm text-center">
+                            <span class="block text-4xl font-bold text-teal-600 mb-2">286</span>
+                            <p class="text-sm font-bold">عث وفراشات</p>
+                            <p class="text-xs text-gray-500">37% مستوطنة</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm text-center">
+                            <span class="block text-4xl font-bold text-teal-600 mb-2">645</span>
+                            <p class="text-sm font-bold">نوع من الخنافس</p>
+                            <p class="text-xs text-gray-500">47% مستوطنة</p>
+                        </div>
+                    </div>
+                    <div class="bg-teal-800 text-white p-8 rounded-3xl text-center">
+                        <h3 class="text-3xl font-bold mb-4">1670 حشرة</h3>
+                        <p class="mb-6">660 نوعاً مستوطناً بنسبة 40%</p>
+                    </div>
+                </section>
+
+                <!-- Tab Content: Mammals -->
+                <section id="mammals" class="ency-content-section hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="bg-white p-8 rounded-3xl shadow-sm">
+                            <h4 class="text-xl font-bold text-teal-700 mb-6 flex items-center">
+                                <i class="fas fa-paw ml-2"></i> الثدييات والزواحف
+                            </h4>
+                            <ul class="space-y-4">
+                                <li class="flex justify-between items-center p-3 bg-gray-50 rounded-lg text-sm">
+                                    <span>الخفافيش</span> <span class="font-bold text-teal-600">4 أنواع</span>
+                                </li>
+                                <li class="flex justify-between items-center p-3 bg-gray-50 rounded-lg text-sm">
+                                    <span>الزواحف البرية (90% مستوطنة)</span> <span class="font-bold text-teal-600">31 نوعاً</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-8 rounded-3xl shadow-sm text-center">
+                            <h4 class="text-xl font-bold text-teal-700 mb-6 flex items-center justify-center">
+                                <i class="fas fa-dove ml-2"></i> الطيور
+                            </h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-4 border border-teal-100 rounded-2xl">
+                                    <span class="text-2xl font-bold text-teal-600 block">250</span>
+                                    <span class="text-xs">نوع طيور</span>
+                                </div>
+                                <div class="p-4 border border-teal-100 rounded-2xl">
+                                    <span class="text-2xl font-bold text-teal-600 block">5</span>
+                                    <span class="text-xs">أنواع مستوطنة</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab Content: Marine -->
+                <section id="marine" class="ency-content-section hidden">
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border-t-4 border-teal-500">
+                        <h3 class="text-2xl font-bold mb-8 text-center text-teal-800">اللافقاريات البحرية</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="p-4 bg-blue-50 rounded-2xl flex items-center gap-4">
+                                <div class="stat-circle w-16 h-16 text-lg font-bold shrink-0">253</div>
+                                <span class="text-xs font-bold">نوع من المرجان الباني</span>
+                            </div>
+                            <div class="p-4 bg-blue-50 rounded-2xl flex items-center gap-4">
+                                <div class="stat-circle w-16 h-16 text-lg font-bold shrink-0">300</div>
+                                <span class="text-xs font-bold">من القشريات العشرية</span>
+                            </div>
+                            <div class="p-4 bg-blue-50 rounded-2xl flex items-center gap-4">
+                                <div class="stat-circle w-16 h-16 text-lg font-bold shrink-0">124</div>
+                                <span class="text-xs font-bold">طحالب كبيرة مستوطنة</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab Content: Fish -->
+                <section id="fish" class="ency-content-section hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white p-6 rounded-2xl shadow-sm text-center border-b-4 border-blue-400">
+                            <i class="fas fa-skull-crossbones text-2xl text-blue-400 mb-2"></i>
+                            <h5 class="text-3xl font-bold">40</h5>
+                            <p class="text-sm font-bold">نوع من أسماك القرش</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm text-center border-b-4 border-blue-400">
+                            <i class="fas fa-fish text-2xl text-blue-400 mb-2"></i>
+                            <h5 class="text-3xl font-bold">729</h5>
+                            <p class="text-sm font-bold">نوع سمك ساحلي</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-2xl shadow-sm text-center border-b-4 border-blue-400">
+                            <i class="fas fa-water text-2xl text-blue-400 mb-2"></i>
+                            <h5 class="text-3xl font-bold">25</h5>
+                            <p class="text-sm font-bold">نوع من الحوتيات</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Tab Content: Others -->
+                <section id="others" class="ency-content-section hidden">
+                    <div class="bg-white p-8 rounded-3xl shadow-sm border-r-4 border-orange-400">
+                        <h4 class="text-xl font-bold text-gray-800 mb-6">إحصائيات جغرافية وبيئية</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <span class="text-gray-600 text-sm">خط الساحل للأرخبيل</span>
+                                <span class="font-bold">493 كم</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b pb-2">
+                                <span class="text-gray-600 text-sm">غابات المانغروف</span>
+                                <span class="font-bold">1.8 كم²</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </section>
+
+    <!-- Map Section Tab -->
+    <section id="socotra-map-section" class="pt-32">
+        <div class="map-header">
+            <span class="map-badge">البيانات الجغرافية</span>
+            <h2>خريطة سقطرى التفاعلية</h2>
+            <p>تحليل جغرافي لتوزيع السكان والمحميات الطبيعية في الأرخبيل</p>
+        </div>
+
+        <div class="population-card max-w-4xl mx-auto mb-12">
+            <div class="population-shape bg-white rounded-[32px] p-8 shadow-sm text-center relative">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/4b/Socotra_map-en.svg" alt="خريطة" class="opacity-10 mx-auto max-w-md">
+                <div class="population-overlay absolute inset-0 flex flex-col justify-center pointer-events-none">
+                    <h3 class="text-5xl font-black text-[#1A4D6D]">100,000</h3>
+                    <p class="text-gray-500 font-bold">نسمة تقريباً في الأرخبيل</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="map-grid">
+            <div class="large-map bg-white p-6 rounded-[32px] shadow-sm relative">
+                <h3 class="font-bold text-[#1A4D6D] mb-6">خريطة تفاعلية</h3>
+                <div class="interactive-map-wrapper relative">
+                    <svg class="socotra-svg w-full h-auto" viewBox="0 0 900 400">
+                        <path class="island-path" d="M190 180 C240 110, 370 100, 460 120 C550 140, 700 100, 760 180 C810 250, 720 310, 610 320 C520 350, 400 360, 290 330 C220 310, 150 250, 190 180 Z" data-title="جزيرة سقطرى" data-info="أكبر الجزر ومقر العاصمة حديبو، تمتاز بأعلى تنوع نباتي في العالم."></path>
+                        <ellipse class="small-island" cx="110" cy="310" rx="60" ry="16" data-title="جزيرة عبد الكوري" data-info="تقع في أقصى الغرب وتشتهر بمصائد الأسماك الوفيرة."></ellipse>
+                        <ellipse class="small-island" cx="320" cy="350" rx="18" ry="8" data-title="جزيرة سمحة" data-info="موطن للعديد من الطيور المهاجرة والأنواع المستوطنة الصغيرة."></ellipse>
+                        <ellipse class="small-island" cx="380" cy="365" rx="10" ry="5" data-title="جزيرة درسة" data-info="جزيرة جبلية صخرية غير مأهولة، غنية بالشعاب المرجانية."></ellipse>
+                    </svg>
+                    <div class="map-tooltip" id="mapTooltip"></div>
+                </div>
+            </div>
+
+            <div class="stats-column flex flex-col gap-6">
+                <div class="bg-white p-6 rounded-[32px] shadow-sm">
+                    <h4 class="font-bold mb-4">توزيع النطاقات</h4>
+                    <div class="circle-chart"><div class="circle-center">75%</div></div>
+                    <div class="text-xs space-y-2 mt-4">
+                        <div class="flex items-center"><span class="dot blue"></span> أساسية بحرية</div>
+                        <div class="flex items-center"><span class="dot orange"></span> منطقة انتقالية</div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-[32px] shadow-sm">
+                    <h4 class="font-bold mb-4">إحصائيات المساحة</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="number-box"><h4>380K</h4><span class="text-[10px]">سقطرى</span></div>
+                        <div class="number-box"><h4>141K</h4><span class="text-[10px]">عبد الكوري</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#1A4D6D] text-white py-12 mt-20">
+        <div class="container mx-auto px-6 text-center">
+            <i class="fas fa-leaf text-[#5D8A3B] text-3xl mb-4"></i>
+            
+            <div class="mb-6">
+                <h3 class="text-xl font-bold mb-1">إيكو سقطرى - حماية بيئية أرخبيل سقطرى</h3>
+                <p class="text-[#5D8A3B] font-medium text-sm">تصميم وتطوير / خالد فرج</p>
+            </div>
+
+            <div class="flex flex-col items-center gap-4 mb-8">
+                <span class="text-xs uppercase tracking-widest opacity-60">مواقع التواصل الاجتماعي</span>
+                <div class="flex justify-center gap-6">
+                    <a href="https://www.instagram.com/khaledbinobaid1" target="_blank" class="hover:text-[#5D8A3B] transition-colors flex items-center gap-2">
+                        <i class="fab fa-instagram text-xl"></i>
+                        <span class="text-xs hidden md:inline">khaledbinobaid1</span>
+                    </a>
+                    <a href="https://www.facebook.com/Khaled Bin Obaid" target="_blank" class="hover:text-[#5D8A3B] transition-colors flex items-center gap-2">
+                        <i class="fab fa-facebook text-xl"></i>
+                        <span class="text-xs hidden md:inline">Khaled Bin Obaid</span>
+                    </a>
+                    <a href="https://wa.me/967775399509" target="_blank" class="hover:text-[#5D8A3B] transition-colors flex items-center gap-2">
+                        <i class="fab fa-whatsapp text-xl"></i>
+                        <span class="text-xs dir-ltr font-sans">967775399509</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="pt-8 border-t border-white/10">
+                <p class="opacity-40 text-[10px]">مبادرة إيكو سقطرى &copy; 2026 - جميع الحقوق محفوظة</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AI Chat -->
+    <div id="ai-chat" class="fixed bottom-6 left-6 w-80 bg-white rounded-[24px] shadow-2xl z-[200] hidden flex flex-col border border-gray-100 overflow-hidden">
+        <div class="bg-[#1A4D6D] p-4 text-white flex justify-between items-center">
+            <span class="font-bold text-xs">مستشار سقطرى الذكي</span>
+            <button onclick="toggleChat()"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="chat-box" class="h-64 p-4 overflow-y-auto bg-gray-50 text-sm"></div>
+        <div class="p-3 bg-white border-t flex gap-2">
+            <input type="text" id="chat-in" class="flex-1 bg-gray-100 rounded-lg px-3 py-2 text-xs" placeholder="اسأل عن سقطرى...">
+            <button class="bg-[#5D8A3B] text-white px-3 rounded-lg"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script>
+        
+        /**
+         * نظام التبديل الرئيسي بين الصفحات
+         */
+        function showTab(tabId, scroll = false, anchor = null) {
+            const sections = {
+                'main': document.getElementById('main-content-wrapper'),
+                'map': document.getElementById('socotra-map-section'),
+                'encyclopedia': document.getElementById('biodiversity-encyclopedia')
+            };
+            
+            const navLinks = {
+                'main': document.getElementById('nav-main'),
+                'map': document.getElementById('nav-map'),
+                'encyclopedia': document.getElementById('nav-encyclopedia')
+            };
+
+            // إخفاء كافة الأقسام وإزالة الحالة النشطة من الروابط
+            Object.values(sections).forEach(el => { if(el) el.style.display = 'none'; });
+            Object.values(navLinks).forEach(el => { if(el) el.classList.remove('active-tab'); });
+
+            // إظهار القسم المطلوب
+            if (sections[tabId]) {
+                sections[tabId].style.display = 'block';
+                if (navLinks[tabId]) navLinks[tabId].classList.add('active-tab');
+            }
+
+            // التعامل مع الانتقال لفقرة معينة أو أعلى الصفحة
+            if (anchor) {
+                setTimeout(() => {
+                    const target = document.querySelector(anchor);
+                    if (target) target.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            } else if (scroll || tabId !== 'main') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+
+        /**
+         * نظام التبديل الداخلي لموسوعة التنوع الحيوي
+         */
+        function showEncyTab(subTabId) {
+            // إخفاء كافة محتويات التبويبات الداخلية
+            document.querySelectorAll('.ency-content-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // إزالة حالة "النشط" من كافة أزرار الموسوعة
+            document.querySelectorAll('.ency-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // إظهار المحتوى المختار وتفعيل الزر
+            const targetContent = document.getElementById(subTabId);
+            const targetBtn = document.getElementById('btn-' + subTabId);
+
+            if (targetContent) targetContent.classList.remove('hidden');
+            if (targetBtn) targetBtn.classList.add('active');
+        }
+
+
+        // تشغيل تفاعلات الخريطة عند تحميل الصفحة
+        window.onload = function() {
+            const tooltip = document.getElementById('mapTooltip');
+            const paths = document.querySelectorAll('.island-path, .small-island');
+
+            paths.forEach(path => {
+                path.addEventListener('mousemove', (e) => {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.left = (e.pageX + 15) + 'px';
+                    tooltip.style.top = (e.pageY + 15) + 'px';
+                    tooltip.innerHTML = `
+                        <div class="font-bold text-teal-400 mb-1">${path.getAttribute('data-title')}</div>
+                        <div class="text-[11px] leading-relaxed">${path.getAttribute('data-info')}</div>
+                    `;
+                });
+
+                path.addEventListener('mouseleave', () => {
+                    tooltip.style.opacity = '0';
+                });
+            });
+
+            // تفعيل التبويب الأول في الموسوعة افتراضياً
+            showEncyTab('plants');
+        };
+
+        function toggleChat() {
+            const chat = document.getElementById('ai-chat');
+            chat.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
